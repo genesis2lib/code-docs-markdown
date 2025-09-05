@@ -1,0 +1,25 @@
+{
+  "version": "1.0.0",
+  "metadata": {
+    "name": "code-documentation-markdown",
+    "kind": "code",
+    "layer": "docs",
+    "type": "markdown",
+    "description": "Markdown documentation for the project",
+    "author": "Genesis2 Code Generator",
+    "tags": ["markdown", "documentation"],
+    "documentation": "https://g.rathnas.com/lib-docs/code-documentation-markdown"
+  },
+  "requirements": {
+    "runtime": {
+    },
+    "build": {
+    }
+  },
+  "validation": {
+  },
+  "generation": {
+  },
+  "environments": {
+  }
+}
