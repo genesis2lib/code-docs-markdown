@@ -1,0 +1,213 @@
+# {{projectName}} - Getting Started Guide
+
+This guide will walk you through setting up {{projectName}} from development to production deployment.
+
+## 📋 Prerequisites
+
+### Development Environment
+- **Node.js 18+**: Frontend development and build tools
+- **Java 21+**: Backend development (Spring Boot)
+- **Docker**: Local database and containerization
+- **Git**: Version control
+
+### AWS Account Setup
+1. **Create AWS Account** if you don't have one
+2. **Create IAM User** with programmatic access
+3. **Attach Policies** (or create custom policy with these permissions):
+   - `AmazonEC2FullAccess`
+   - `AmazonS3FullAccess`
+   - `CloudFrontFullAccess`
+   - `AmazonRoute53FullAccess`
+   - `AWSCertificateManagerFullAccess`
+   - `IAMFullAccess`
+
+### Domain Configuration
+- **Domain**: Own a domain name (e.g., yourdomain.com)
+- **DNS**: Either use Route53 or point nameservers to AWS
+
+## 🚀 Step-by-Step Setup
+
+### 1. Clone and Local Development
+
+```bash
+# Clone repository
+git clone https://github.com/{{project.owner}}/{{repo}}.git
+cd {{repo}}
+
+# Start backend (in one terminal)
+cd backend-*
+./gradlew bootRun
+# Backend available at: http://localhost:8080
+
+# Start frontend (in another terminal)
+cd frontend-*
+npm install
+npm run dev  
+# Frontend available at: http://localhost:3000
+```
+
+### 2. AWS Configuration
+
+#### Generate AWS Access Keys
+1. Go to AWS Console → IAM → Users → [Your User] → Security credentials
+2. Click "Create access key" → Choose "Command Line Interface"
+3. Copy the Access Key ID and Secret Access Key
+
+#### Configure Domain in Route53 (Recommended)
+1. Go to AWS Console → Route53 → Hosted zones
+2. Click "Create hosted zone"
+3. Enter your domain name (e.g., yourdomain.com)
+4. Copy the 4 nameservers and update them in your domain registrar
+
+### 3. GitHub Repository Secrets
+
+Go to your GitHub repository → Settings → Secrets and variables → Actions
+
+Add these **Repository secrets**:
+
+```
+AWS_ACCESS_KEY_ID          # Your AWS access key ID
+AWS_SECRET_ACCESS_KEY      # Your AWS secret access key  
+TF_VAR_domain_name         # Your root domain (e.g., yourdomain.com)
+TF_VAR_subdomain           # Subdomain for this project (e.g., api)
+```
+
+**Example values:**
+- `AWS_ACCESS_KEY_ID`: `AKIAIOSFODNN7EXAMPLE`
+- `AWS_SECRET_ACCESS_KEY`: `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`
+- `TF_VAR_domain_name`: `yourdomain.com`
+- `TF_VAR_subdomain`: `{{projectName}}`
+
+### 4. Deploy Infrastructure
+
+#### Option A: Automatic Deployment (Recommended)
+1. **Push to main branch** - this triggers all workflows automatically
+2. **Monitor GitHub Actions** - watch the workflows complete in order:
+   - `Appinfra-010-init` → `Appinfra-020-bootstrap` → `Appinfra-030-apply`
+   - `Code-200-client` and `Code-300-server` (run in parallel)
+
+#### Option B: Manual Deployment
+```bash
+# Navigate to infrastructure directory
+cd ops-*
+
+# Initialize Terraform
+terraform init -backend-config=backend-production.hcl
+
+# Plan deployment (review changes)
+terraform plan -var-file=environments/production.tfvars
+
+# Apply infrastructure
+terraform apply -var-file=environments/production.tfvars
+```
+
+### 5. Verify Deployment
+
+After deployment completes (5-10 minutes), verify:
+
+#### Frontend
+- Visit: `https://{{projectName}}.{{domain}}`
+- Should load React application
+
+#### Backend API  
+- Visit: `https://api.{{domain}}/actuator/health`
+- Should return: `{"status":"UP"}`
+
+#### SSL Certificate
+- Check browser padlock icon (should be green/secure)
+- Certificate auto-renews every 60 days
+
+## 🔧 Configuration Details
+
+### Environment Variables
+
+The following variables are automatically configured during deployment:
+
+{{#modules}}
+{{#configs}}
+#### {{name}} Module
+{{#configs}}
+- **{{key}}**: {{#secret}}Managed as AWS Systems Manager Parameter{{/secret}}{{^secret}}Set to: `{{value}}`{{/secret}}
+{{/configs}}
+
+{{/configs}}
+{{/modules}}
+
+### Custom Configuration
+
+To modify application settings:
+
+1. **Development**: Edit `.env.local` files in respective modules
+2. **Production**: Update GitHub secrets or modify Terraform variables
+
+### Database Configuration
+
+The backend uses PostgreSQL running on AWS RDS:
+- **Local**: Docker container (started with `docker-compose up`)
+- **Production**: RDS instance (automatically provisioned)
+
+### Auth0 Setup (if applicable)
+
+{{#auth0Domain}}
+If your project includes Auth0:
+
+1. Create Auth0 account and application
+2. Configure callback URLs:
+   - Development: `http://localhost:3000/callback`
+   - Production: `https://{{projectName}}.{{domain}}/callback`
+3. Add Auth0 secrets to GitHub repository secrets
+{{/auth0Domain}}
+
+## 🔍 Monitoring & Maintenance
+
+### Health Checks
+- **Frontend**: Accessible via CloudFront
+- **Backend**: `GET /actuator/health`
+- **Infrastructure**: AWS Console monitoring
+
+### Logs
+- **Application Logs**: CloudWatch Logs
+- **Infrastructure**: CloudTrail
+- **Deployment**: GitHub Actions logs
+
+### Backups
+- **Database**: Automatic RDS snapshots (daily)
+- **Code**: Git repository
+- **Infrastructure**: Terraform state in S3
+
+## ❓ Common Issues
+
+### SSL Certificate Issues
+**Problem**: SSL certificate not issuing
+**Solution**: 
+1. Verify DNS records in Route53 match your domain
+2. Check Certificate Manager in `us-east-1` region
+3. Allow 5-10 minutes for validation
+
+### Deployment Failures
+**Problem**: GitHub Actions failing
+**Solution**:
+1. Check AWS credentials are correct
+2. Verify IAM permissions
+3. Review GitHub Actions logs for specific errors
+
+### Application Not Loading
+**Problem**: 404 or connection errors
+**Solution**:
+1. Check if infrastructure deployed successfully
+2. Verify security groups allow traffic
+3. Check CloudFront distribution status
+
+## 🚀 Next Steps
+
+After successful deployment:
+
+1. **Custom Domain**: Point your domain to the deployed application
+2. **Monitoring**: Set up CloudWatch alarms
+3. **Backups**: Configure automated backups
+4. **Scaling**: Adjust instance sizes based on usage
+5. **Security**: Review and tighten security groups
+
+---
+
+**Need help?** Create an issue in the [GitHub repository](https://github.com/{{project.owner}}/{{repo}}/issues)

@@ -1,14 +1,14 @@
 {
   "version": "1.0.0",
   "metadata": {
-    "name": "code-documentation-markdown", 
+    "name": "code-docs-markdown", 
     "kind": "code",
     "layer": "docs",
     "type": "markdown",
     "description": "Comprehensive Help.md documentation for engineers working with Genesis2 generated projects",
     "author": "Genesis2 Code Generator",
     "tags": ["markdown", "documentation", "help", "engineering", "guide"],
-    "documentation": "https://g.rathnas.com/lib-docs/code-documentation-markdown"
+    "documentation": "https://g.rathnas.com/lib-docs/code-docs-markdown"
   },
   "requirements": {
     "runtime": {},

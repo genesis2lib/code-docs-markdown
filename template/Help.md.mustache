@@ -1,257 +1,116 @@
 # {{projectName}} - Help & Documentation
 
-Welcome to the {{projectName}} project! This documentation provides comprehensive information for engineers working with this repository.
+Welcome to {{projectName}}! This is a Genesis2-generated project with integrated infrastructure, backend, and frontend components.
 
 ## 🚀 Quick Start
 
-This project is built using the Genesis2 framework and consists of multiple integrated modules. Below you'll find detailed information about each component and how to work with them.
+### Local Development
+1. **Frontend**: `cd frontend-* && npm install && npm run dev` (→ http://localhost:3000)
+2. **Backend**: `cd backend-* && ./gradlew bootRun` (→ http://localhost:8080)
+3. **Infrastructure**: See [GettingStarted.md](./GettingStarted.md) for AWS deployment
 
 ## 📋 Project Overview
 
-- **Project Name**: {{projectName}}
 - **Domain**: {{domain}}
 - **Repository**: {{repo}}
-- **Owner**: {{project.owner}}
 - **Version**: {{project.version}}
-- **License**: {{project.license}}
+- **Architecture**: Multi-layered (ops, backend, frontend{{#modules}}{{#configs}}, docs{{/configs}}{{/modules}})
 
-## 🏗️ Architecture Overview
-
-This project follows a multi-layered architecture with the following modules:
+## 🏗️ Architecture
 
 {{#modules}}
-### {{layer}} - {{type}} ({{name}})
-
-{{kind}} module that handles {{layer}} layer functionality.
-
-**Module Details:**
-- **Kind**: {{kind}}
-- **Layer**: {{layer}} 
-- **Type**: {{type}}
-- **Name**: {{name}}
-{{#region}}
-- **Region**: {{region}}
-{{/region}}
-- **Status**: {{#enabled}}✅ Enabled{{/enabled}}{{^enabled}}❌ Disabled{{/enabled}}
-
-{{#configs}}
-**Configuration Variables:**
-{{#configs}}
-- `{{key}}`: {{value}} {{#secret}}🔐{{/secret}}{{#env}} ({{env}}){{/env}}
-{{/configs}}
-
-{{/configs}}
-{{#dependencies}}
-**Dependencies:**
-{{#dependencies}}
-- {{.}}
-{{/dependencies}}
-
-{{/dependencies}}
----
-
+### {{layer}} - {{type}}
+{{kind}} module for {{layer}} layer functionality ({{#enabled}}✅ Enabled{{/enabled}}{{^enabled}}❌ Disabled{{/enabled}})
 {{/modules}}
 
-## 🔧 Development Setup
+## ⚙️ Configuration & Deployment
 
-### Prerequisites
-- Node.js 18+ (for frontend development)
-- Java 21+ (for backend development) 
-- Docker (for containerization)
-- AWS CLI (for infrastructure deployment)
+### Required Setup
+To deploy this project end-to-end, you need:
 
-### Getting Started
+1. **AWS Account** with appropriate permissions
+2. **GitHub Secrets** configured for CI/CD
+3. **Domain** configured for SSL certificates
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/{{project.owner}}/{{repo}}.git
-   cd {{repo}}
-   ```
+### GitHub Secrets Required
+Configure these secrets in your GitHub repository settings:
 
-2. **Frontend Setup**
-   ```bash
-   # Look for directories starting with 'frontend-'
-   cd frontend-*
-   npm install
-   npm run dev
-   ```
-   
-   The frontend will be available at `http://localhost:3000`
+```
+AWS_ACCESS_KEY_ID          # AWS programmatic access key
+AWS_SECRET_ACCESS_KEY      # AWS secret access key
+TF_VAR_domain_name         # Your domain (e.g., yourdomain.com)
+TF_VAR_subdomain           # Subdomain for this project
+```
 
-3. **Backend Setup**
-   ```bash
-   # Look for directories starting with 'backend-'
-   cd backend-*
-   ./gradlew bootRun
-   ```
-   
-   The backend API will be available at `http://localhost:8080`
+### AWS Setup
+1. **Create AWS user** with appropriate permissions (EC2, S3, CloudFront, Route53, Certificate Manager)
+2. **Generate access keys** and add to GitHub secrets
+3. **Configure domain** in Route53 or point nameservers to AWS
 
-4. **Infrastructure Setup**
-   ```bash
-   # Look for directories starting with 'ops-'
-   cd ops-*
-   
-   # Initialize Terraform
-   terraform init -backend-config=backend-production.hcl
-   
-   # Plan deployment
-   terraform plan -var-file=environments/production.tfvars
-   
-   # Apply infrastructure
-   terraform apply -var-file=environments/production.tfvars
-   ```
+### Deployment Process
+1. Push code to trigger GitHub Actions workflows
+2. Infrastructure deploys automatically via Terraform
+3. Applications deploy to provisioned resources
+4. SSL certificates auto-provision and renew
 
-## 🌍 Environment Configuration
+**📖 For detailed setup instructions, see [GettingStarted.md](./GettingStarted.md)**
 
-This project supports multiple environments with the following configuration:
+## 🚀 GitHub Actions Workflows
 
-{{#modules}}
-{{#configs}}
-### {{name}} Configuration
+| Workflow | Purpose |
+|----------|----------|
+| `Appinfra-010-init` | Initialize AWS resources and Terraform state |
+| `Appinfra-020-bootstrap` | Configure S3 buckets and DynamoDB |
+| `Appinfra-030-apply` | Deploy infrastructure changes |
+| `Code-200-client` | Build and deploy frontend to CloudFront/S3 |
+| `Code-300-server` | Build and deploy backend to EC2 |
+| `SSL Workflows` | Manage HTTPS certificates |
 
-{{#configs}}
-- **{{key}}**: {{#env}}[{{env}}] {{/env}}{{value}} {{#secret}}(Secret){{/secret}}
-{{/configs}}
-
-{{/configs}}
-{{/modules}}
-
-## 🚀 Deployment
-
-### CI/CD Pipeline
-This project uses GitHub Actions for continuous integration and deployment:
-
-- **Infrastructure**: Automated AWS infrastructure deployment
-- **Backend**: Spring Boot application deployment to EC2
-- **Frontend**: React application deployment to CloudFront/S3
-- **SSL**: Automatic SSL certificate management
-
-### Deployment Workflows
-1. **Appinfra-010-init**: Sets up AWS resources and Terraform state
-2. **Appinfra-020-bootstrap**: Configures S3 buckets and DynamoDB tables
-3. **Appinfra-030-apply**: Deploys infrastructure changes
-4. **Code-200-client**: Builds and deploys frontend application
-5. **Code-300-server**: Builds and deploys backend application
-6. **SSL Workflows**: Configures HTTPS certificates
-
-### Available Environments
-- **Development**: For local development and testing
-- **Staging**: Pre-production environment for final testing
-- **Production**: Live production environment
-
-## 📚 API Documentation
+## 📚 API & Security
 
 ### Backend API
-
-The backend API provides RESTful endpoints for the application.
-
-- **Local URL**: `http://localhost:8080`
-- **Production URL**: `https://api.{{domain}}`
-- **Documentation**: Available at `/swagger-ui/index.html`
+- **Local**: http://localhost:8080
+- **Production**: https://api.{{domain}}
 - **Health Check**: `GET /actuator/health`
+- **API Docs**: `/swagger-ui/index.html`
 
-**Key Endpoints:**
-- `GET /actuator/health` - Service health status
-- `GET /actuator/info` - Application information  
-- Authentication endpoints via Auth0 integration
-
-## 🔐 Security
-
-### Authentication
-{{#auth0Domain}}
-This project uses Auth0 for authentication:
-- **Auth0 Domain**: {{auth0Domain}}
-- **Integration**: Seamless login/logout flow
-- **Authorization**: Role-based access control
-{{/auth0Domain}}
-
-### Environment Security
-- Production secrets are encrypted and managed via AWS
-- Development uses placeholder values  
-- Never commit real credentials to the repository
-- Use `.env.local` files for local development secrets
+### Security
+- **Authentication**: Auth0 integration with role-based access
+- **Secrets**: Managed via AWS Systems Manager and GitHub Secrets
+- **SSL**: Automatic certificate provisioning and renewal
 
 ## 🛠️ Troubleshooting
 
-### Common Issues
-
-1. **Build Failures**
-   - Ensure all dependencies are installed: `npm install` or `./gradlew build`
-   - Check Node.js version: `node --version` (should be 18+)
-   - Check Java version: `java --version` (should be 21+)
-   - Clear cache: `npm run clean` or `./gradlew clean`
-
-2. **Infrastructure Deployment Issues**
-   - Verify AWS credentials: `aws sts get-caller-identity`
-   - Check Terraform state: `terraform state list`
-   - Ensure DNS records are properly configured in your domain provider
-   - Verify SSL certificate validation in AWS Certificate Manager
-
-3. **SSL Certificate Issues**
-   - Check certificate status in AWS Console (Certificate Manager)
-   - Verify DNS validation records are added to your domain provider
-   - Allow up to 48 hours for DNS propagation
-   - Certificate must be in `us-east-1` region for CloudFront
-
-4. **Auth0 Integration Issues**
-   - Verify Auth0 domain and client ID configuration
-   - Check callback URLs in Auth0 dashboard
-   - Ensure proper CORS settings for your domain
+| Issue | Solution |
+|-------|----------|
+| Build failures | Check Node.js 18+ and Java 21+, run `npm install` or `./gradlew build` |
+| AWS deployment | Verify credentials with `aws sts get-caller-identity` |
+| SSL certificate | Check AWS Certificate Manager, ensure DNS records |
+| Auth0 issues | Verify domain/client ID, check callback URLs |
 
 ### Debug Commands
-
 ```bash
-# Check application logs
-docker logs <container_name>
-
-# Test API connectivity  
-curl -X GET http://localhost:8080/actuator/health
-
-# Check Terraform state
-terraform show
-
-# Validate AWS resources
-aws ec2 describe-instances
-aws s3 ls
+curl -X GET http://localhost:8080/actuator/health  # Test API
+aws sts get-caller-identity                        # Check AWS auth
+terraform state list                               # Check infrastructure
 ```
-
-### Getting Help
-
-- **GitHub Issues**: Report bugs and request features at https://github.com/{{project.owner}}/{{repo}}/issues
-- **Team Chat**: Reach out to the development team
-- **Documentation**: Check module-specific README files in each directory
-- **Stack Overflow**: Tag questions with `genesis2` and relevant technology tags
 
 ## 📂 Project Structure
-
 ```
 {{repo}}/
-├── .github/workflows/          # CI/CD pipeline definitions
-├── frontend-react-*/          # React frontend application
-├── backend-spring-*/          # Spring Boot backend application  
-├── ops-aws-*/                # AWS infrastructure as code
-├── Help.md                   # This documentation file
-├── README.md                 # Project overview
-└── genesis2.json            # Genesis2 project metadata
+├── .github/workflows/     # CI/CD pipelines
+├── frontend-react-*/      # React frontend
+├── backend-spring-*/      # Spring Boot backend  
+├── ops-aws-*/            # AWS infrastructure
+├── Help.md               # This file
+├── GettingStarted.md     # Detailed setup guide
+└── genesis2.json         # Project metadata
 ```
 
-## 📞 Support & Contact
+## 📞 Support
 
-- **Repository**: https://github.com/{{project.owner}}/{{repo}}
 - **Issues**: https://github.com/{{project.owner}}/{{repo}}/issues
-- **Wiki**: https://github.com/{{project.owner}}/{{repo}}/wiki
-- **Discussions**: https://github.com/{{project.owner}}/{{repo}}/discussions
-
-## 🔄 Updates & Maintenance
-
-This project is generated and maintained using the Genesis2 framework. To update:
-
-1. **Update Genesis2 generators**: Pull latest changes from genesis2lib
-2. **Re-generate modules**: Run genesis2 with updated payload.json
-3. **Test thoroughly**: Verify all functionality after updates
-4. **Deploy incrementally**: Use staging environment first
+- **Documentation**: Check module README files
+- **Updates**: Generated with Genesis2 framework
 
 ---
-
-*Generated with ❤️ by Genesis2 Framework*
