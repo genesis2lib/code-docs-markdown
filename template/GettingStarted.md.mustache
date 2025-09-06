@@ -12,18 +12,26 @@ This guide will walk you through setting up {{projectName}} from development to 
 
 ### AWS Account Setup
 1. **Create AWS Account** if you don't have one
-2. **Create IAM User** with programmatic access
-3. **Attach Policies** (or create custom policy with these permissions):
-   - `AmazonEC2FullAccess`
-   - `AmazonS3FullAccess`
-   - `CloudFrontFullAccess`
-   - `AmazonRoute53FullAccess`
-   - `AWSCertificateManagerFullAccess`
-   - `IAMFullAccess`
+2. **Create IAM User**:
+   - User name: genesis2-admin
+   - Next
+   - Attach policies directly, Check `AdministratorAccess`
+   - Next, Create User
+3. **Create credentials**:
+   - Select `genesis2-admin`
+   - Go to `Security credentials` tab
+   - Create access key
+   - Select `Application running outside AWS`
+   - Next
+   - Description: `Key used by genesis2 ops`
+   - Create access key
+   - Copy the id into github [action variables**](../../../settings/variables/actions), with key `AWS_ADMIN_ID`
+   - Copy the secret into [gitbuh **secrets**](../../../settings/secrets/actions), with key `AWS_ADMIN_SECRET`
+   - 
 
 ### Domain Configuration
-- **Domain**: Own a domain name (e.g., yourdomain.com)
-- **DNS**: Either use Route53 or point nameservers to AWS
+- **Domain**: Own a domain name if required by your infrastructure
+- **DNS**: Configure DNS as needed for your deployment
 
 ## 🚀 Step-by-Step Setup
 
@@ -33,52 +41,36 @@ This guide will walk you through setting up {{projectName}} from development to 
 # Clone repository
 git clone https://github.com/{{project.owner}}/{{repo}}.git
 cd {{repo}}
-
-# Start backend (in one terminal)
-cd backend-*
-./gradlew bootRun
-# Backend available at: http://localhost:8080
-
-# Start frontend (in another terminal)
-cd frontend-*
-npm install
-npm run dev  
-# Frontend available at: http://localhost:3000
 ```
 
-### 2. AWS Configuration
+{{#backendModules}}
+```bash
+# Start {{name}} ({{type}})
+cd {{name}}
+{{startCommand}}
+```
+{{/backendModules}}
 
-#### Generate AWS Access Keys
-1. Go to AWS Console → IAM → Users → [Your User] → Security credentials
-2. Click "Create access key" → Choose "Command Line Interface"
-3. Copy the Access Key ID and Secret Access Key
+{{#frontendModules}}
+```bash
+# Start {{name}} ({{type}})
+cd {{name}}
+{{startCommand}}
+```
+{{/frontendModules}}
 
-#### Configure Domain in Route53 (Recommended)
-1. Go to AWS Console → Route53 → Hosted zones
-2. Click "Create hosted zone"
-3. Enter your domain name (e.g., yourdomain.com)
-4. Copy the 4 nameservers and update them in your domain registrar
-
-### 3. GitHub Repository Secrets
+### 2. Repository Secrets
 
 Go to your GitHub repository → Settings → Secrets and variables → Actions
 
 Add these **Repository secrets**:
 
 ```
-AWS_ACCESS_KEY_ID          # Your AWS access key ID
-AWS_SECRET_ACCESS_KEY      # Your AWS secret access key  
-TF_VAR_domain_name         # Your root domain (e.g., yourdomain.com)
-TF_VAR_subdomain           # Subdomain for this project (e.g., api)
+AWS_ADMIN_KEY              # Your AWS access key for infrastructure
+DNS_PROVIDER_KEY           # Your DNS provider key for domain management
 ```
 
-**Example values:**
-- `AWS_ACCESS_KEY_ID`: `AKIAIOSFODNN7EXAMPLE`
-- `AWS_SECRET_ACCESS_KEY`: `wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY`
-- `TF_VAR_domain_name`: `yourdomain.com`
-- `TF_VAR_subdomain`: `{{projectName}}`
-
-### 4. Deploy Infrastructure
+### 3. Deploy Infrastructure
 
 #### Option A: Automatic Deployment (Recommended)
 1. **Push to main branch** - this triggers all workflows automatically
@@ -88,20 +80,15 @@ TF_VAR_subdomain           # Subdomain for this project (e.g., api)
 
 #### Option B: Manual Deployment
 ```bash
-# Navigate to infrastructure directory
-cd ops-*
+{{#opsModules}}
+# Navigate to {{name}} directory
+cd {{name}}
 
-# Initialize Terraform
-terraform init -backend-config=backend-production.hcl
-
-# Plan deployment (review changes)
-terraform plan -var-file=environments/production.tfvars
-
-# Apply infrastructure
-terraform apply -var-file=environments/production.tfvars
+# Check the module's README for specific deployment instructions
+{{/opsModules}}
 ```
 
-### 5. Verify Deployment
+### 4. Verify Deployment
 
 After deployment completes (5-10 minutes), verify:
 
@@ -119,19 +106,14 @@ After deployment completes (5-10 minutes), verify:
 
 ## 🔧 Configuration Details
 
-### Environment Variables
+### Essential Environment Variables
 
-The following variables are automatically configured during deployment:
+Only these essential variables are required for deployment:
 
-{{#modules}}
-{{#configs}}
-#### {{name}} Module
-{{#configs}}
-- **{{key}}**: {{#secret}}Managed as AWS Systems Manager Parameter{{/secret}}{{^secret}}Set to: `{{value}}`{{/secret}}
-{{/configs}}
+- **AWS_ADMIN_KEY**: Your AWS access key for infrastructure management
+- **DNS_PROVIDER_KEY**: Your DNS provider API key for domain configuration
 
-{{/configs}}
-{{/modules}}
+All other application configurations are automatically managed during deployment.
 
 ### Custom Configuration
 
